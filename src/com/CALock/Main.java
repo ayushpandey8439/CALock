@@ -16,21 +16,27 @@ public class Main {
             } catch (Exception e) {
                 System.out.println("Encountered Exception " + e.getMessage());
             }
-
         }
 
         G.root = G.vertices.get(1);
 
         HashMap<Integer, int[]> edgeMap = createRandomDAG(numNodes);
+
+
         for (int source : edgeMap.keySet()) {
             for (int target : edgeMap.get(source)) {
                 try {
-                    G.createEdge(source, target);
+                    G.createEdgeWithoutUpdatingPaths(source, target);
+                    //G.createEdge(source, target);
+                    //TODO: Change this to see if Preprocessing and dynamic graphs have the same result.
                 } catch (Exception e) {
                     System.out.println("Create Edge failed for " + source + " -> " + target);
                 }
             }
         }
+
+        preProcessor P = new preProcessor();
+        G = P.assignLabels(G, G.root);
 
         printGraph(G);
 

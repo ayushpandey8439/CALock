@@ -17,6 +17,39 @@ public class graph {
 
     }
 
+    public int findPathLSCA(graph G, int... V) {
+        int[][] studyPaths = new int[][]{};
+        for (int v : V) {
+            vertex vert = G.vertices.get(v);
+            studyPaths = ArrayUtils.addAll(studyPaths, vert.lowPath, vert.highPath);
+        }
+
+        int[] shortestPath = studyPaths[0];
+        for (int[] p : studyPaths) {
+            if (p.length < shortestPath.length) {
+                shortestPath = p;
+            }
+        }
+
+        int lowestNode = 0;
+        for (int i = 0; i < shortestPath.length; i++) {
+            boolean isCommon = true;
+            for (int j = 0; j < studyPaths.length; j++) {
+                if (studyPaths[j][i] != shortestPath[i]) {
+                    isCommon = false;
+                    break;
+                }
+            }
+
+            if (!isCommon) {
+                break;
+            } else {
+                lowestNode = shortestPath[i];
+            }
+        }
+        return lowestNode;
+    }
+
     public void addVertex(int data) throws Exception {
         this.vertices.put(nodecounter, new vertex(nodecounter, data));
         this.nodecounter++;
@@ -35,6 +68,18 @@ public class graph {
         }
     }
 
+    public void createEdgeWithoutUpdatingPaths(int s, int t) throws Exception {
+        vertex source = this.vertices.get(s);
+        vertex target = this.vertices.get(t);
+
+        if (source != null && target != null) {
+            source.children.put(t, target);
+            target.parents.put(s, source);
+        } else {
+            throw new Exception("Source or target missing from te graph");
+        }
+    }
+
     public void removeEdge(int s, int t) throws Exception {
         vertex source = this.vertices.get(s);
         vertex target = this.vertices.get(t);
@@ -42,7 +87,7 @@ public class graph {
         source.children.remove(t);
         target.parents.remove(s);
 
-        target.lowPath = target.parents.values().iterator().next().lowPath; // A really complex way of getting the first element in a Map. 
+        target.lowPath = target.parents.values().iterator().next().lowPath; // A really complex way of getting the first element in a Map.
 
         int shortestPrefix = target.lowPath.length;
 
@@ -68,7 +113,6 @@ public class graph {
             updatePath(target, c, false, target.Id, target.lowPath, target.highPath);
         }
     }
-
 
     private void updatePath(vertex source, vertex target, boolean isInherited, int inheritedFrom, int[] inheritedLow, int[] inheritedHigh) {
         if (isInherited) {
@@ -112,4 +156,6 @@ public class graph {
 
         }
     }
+
+
 }

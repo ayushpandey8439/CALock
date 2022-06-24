@@ -4,56 +4,40 @@ import org.apache.commons.lang3.ArrayUtils;
 
 import java.util.HashMap;
 
+import static org.apache.commons.lang3.RandomUtils.nextInt;
+
 public class testUtils {
 
     private int[][] DFSPaths;
     private int[] currentPath;
 
 
+    //TODO: Fix random graph generation.
     public static HashMap<Integer, int[]> createRandomDAG(int numNodes) {
         HashMap<Integer, int[]> edgeMap = new HashMap<Integer, int[]>();
 
+        for (int i = 1; i <= numNodes; i++) {
+            int childCount = nextInt(i, numNodes + 1);
+            int[] childList = new int[]{};
+            for (int j = 1; j <= childCount; j++) {
+                int child = nextInt(i, numNodes);
+                if (child != i) {
+                    childList = ArrayUtils.addAll(childList, child);
+                }
+            }
+            edgeMap.put(i, childList);
+        }
+
+        /*
         edgeMap.put(1, new int[]{2, 6});
         edgeMap.put(4, new int[]{5});
         edgeMap.put(2, new int[]{3, 8, 5});
         edgeMap.put(3, new int[]{4});
         edgeMap.put(6, new int[]{7});
         edgeMap.put(7, new int[]{5});
+         */
 
         return edgeMap;
-    }
-
-    public static int findPathLSCA(graph G, int... V) {
-        int[][] studyPaths = new int[][]{};
-        for (int v : V) {
-            vertex vert = G.vertices.get(v);
-            studyPaths = ArrayUtils.addAll(studyPaths, vert.lowPath, vert.highPath);
-        }
-
-        int[] shortestPath = studyPaths[0];
-        for (int[] p : studyPaths) {
-            if (p.length < shortestPath.length) {
-                shortestPath = p;
-            }
-        }
-
-        int lowestNode = 0;
-        for (int i = 0; i < shortestPath.length; i++) {
-            boolean isCommon = true;
-            for (int j = 0; j < studyPaths.length; j++) {
-                if (studyPaths[j][i] != shortestPath[i]) {
-                    isCommon = false;
-                    break;
-                }
-            }
-
-            if (!isCommon) {
-                break;
-            } else {
-                lowestNode = shortestPath[i];
-            }
-        }
-        return lowestNode;
     }
 
 
@@ -66,7 +50,7 @@ public class testUtils {
         }
 
 
-        int[] shortestPath = DFSPaths[0];
+        int[] shortestPath = DFSPaths.length > 0 ? DFSPaths[0] : new int[]{};// For non-reachable pairs, DFS Paths will be empty.
         for (int[] p : DFSPaths) {
             if (p.length < shortestPath.length) {
                 shortestPath = p;
@@ -112,9 +96,9 @@ public class testUtils {
         String[] failedPairs = new String[]{};
         for (int i = 1; i <= numNodes; i++) {
             for (int j = i + 1; j <= numNodes; j++) {
-                int PLSCA = findPathLSCA(G, i, j);
+                int PLSCA = G.findPathLSCA(G, i, j);
                 int TLSCA = findTraversalLSCA(G, i, j);
-                if (PLSCA != TLSCA) {
+                if ((PLSCA != TLSCA) && (PLSCA != 0 && TLSCA != 0)) {
                     failedPairs = ArrayUtils.addAll(failedPairs, "" + i + " " + j);
                 }
             }
