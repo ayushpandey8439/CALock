@@ -55,10 +55,6 @@ public class graph {
         this.nodecounter++;
     }
 
-    public void removeVertex(int id) {
-        this.vertices.remove(id);
-    }
-
     public void createEdge(int s, int t) throws Exception {
         vertex source = this.vertices.get(s);
         vertex target = this.vertices.get(t);
