@@ -20,7 +20,7 @@ public class testUtils {
     private int[][] DFSPaths;
     private int[] currentPath;
 
-    public static graph createRandomDAG(int numNodes, boolean assignLabelsDuringCreation) {
+    public static graph createDAG(int numNodes, boolean assignLabelsDuringCreation) {
         graph G = new graph();
         for (int i = 1; i <= numNodes; i++) {
             try {
@@ -31,14 +31,11 @@ public class testUtils {
         }
 
         G.root = G.vertices.get(1);
-        HashMap<Integer, int[]> edgeMap = new HashMap<>();
-        edgeMap.put(1, new int[]{2, 6});
-        edgeMap.put(2, new int[]{8, 5, 3});
-        edgeMap.put(3, new int[]{4});
-        edgeMap.put(4, new int[]{5});
-        edgeMap.put(6, new int[]{7});
-        edgeMap.put(7, new int[]{5});
 
+        HashMap<Integer, int[]> edgeMap = new HashMap<>();
+        edgeMap.put(1, new int[]{2});
+        edgeMap.put(3, new int[]{2});
+        edgeMap.put(4, new int[]{2});
 
         for (int source : edgeMap.keySet()) {
             for (int target : edgeMap.get(source)) {
@@ -59,9 +56,31 @@ public class testUtils {
             preProcessor P = new preProcessor();
             G = P.assignLabels(G);
         }
+
+        // Any node without a parent is considered a root.
+        // If there is more than one root node then create a sentinel root above all of them.
+        vertex[] roots = new vertex[]{};
+        for (vertex v : G.vertices.values()) {
+            if (v.parents.size() == 0) {
+                roots = ArrayUtils.addAll(roots, v);
+            }
+        }
+
+        if (roots.length > 1) {
+            int newRoot = G.addVertex(0);
+            G.root = G.vertices.get(newRoot);
+
+            for (vertex r : roots) {
+                try {
+                    G.createEdge(newRoot, r.Id);
+                } catch (Exception e) {
+                    System.out.println("Create Edge failed for " + newRoot + " -> " + r.Id);
+                }
+            }
+        }
+
         return G;
     }
-
 
     private int findTraversalLSCA(graph G, int... V) {
         this.currentPath = new int[]{G.root.Id};

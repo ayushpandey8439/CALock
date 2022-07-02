@@ -50,9 +50,11 @@ public class graph {
         return lowestNode;
     }
 
-    public void addVertex(int data) {
+    public int addVertex(int data) {
         this.vertices.put(nodecounter, new vertex(nodecounter, data));
         this.nodecounter++;
+        return nodecounter - 1;
+
     }
 
     public void createEdge(int s, int t) throws Exception {
