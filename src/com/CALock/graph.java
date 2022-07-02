@@ -55,6 +55,10 @@ public class graph {
         this.nodecounter++;
     }
 
+    public void removeVertex(int id) {
+        this.vertices.remove(id);
+    }
+
     public void createEdge(int s, int t) throws Exception {
         vertex source = this.vertices.get(s);
         vertex target = this.vertices.get(t);
@@ -86,8 +90,10 @@ public class graph {
 
         source.children.remove(t);
         target.parents.remove(s);
-
-        target.lowPath = target.parents.values().iterator().next().lowPath; // A really complex way of getting the first element in a Map.
+        // Remove both labels from the target and reassign two from the parents
+        vertex firstParent = target.parents.values().iterator().next();// A really complex way of getting the first element in a Map.
+        target.lowPath = ArrayUtils.addAll(firstParent.lowPath, target.Id);
+        target.highPath = ArrayUtils.addAll(firstParent.highPath, target.Id);
 
         int shortestPrefix = target.lowPath.length;
 

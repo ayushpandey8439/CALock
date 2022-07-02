@@ -20,34 +20,46 @@ public class testUtils {
     private int[][] DFSPaths;
     private int[] currentPath;
 
-
-    //TODO: Fix random graph generation.
-    public static HashMap<Integer, int[]> createRandomDAG(int numNodes) {
-        HashMap<Integer, int[]> edgeMap = new HashMap<Integer, int[]>();
-
-        /*for (int i = 1; i <= numNodes; i++) {
-            int childCount = nextInt(i, numNodes + 1);
-            int[] childList = new int[]{};
-            for (int j = 1; j <= childCount; j++) {
-                int child = nextInt(i, numNodes);
-                if (child != i) {
-                    childList = ArrayUtils.addAll(childList, child);
-                }
+    public static graph createRandomDAG(int numNodes, boolean assignLabelsDuringCreation) {
+        graph G = new graph();
+        for (int i = 1; i <= numNodes; i++) {
+            try {
+                G.addVertex(i);
+            } catch (Exception e) {
+                System.out.println("Encountered Exception " + e.getMessage());
             }
-            edgeMap.put(i, childList);
         }
 
-         */
-
+        G.root = G.vertices.get(1);
+        HashMap<Integer, int[]> edgeMap = new HashMap<>();
         edgeMap.put(1, new int[]{2, 6});
-        edgeMap.put(4, new int[]{5});
-        edgeMap.put(2, new int[]{3, 8, 5});
+        edgeMap.put(2, new int[]{8, 5, 3});
         edgeMap.put(3, new int[]{4});
+        edgeMap.put(4, new int[]{5});
         edgeMap.put(6, new int[]{7});
         edgeMap.put(7, new int[]{5});
 
 
-        return edgeMap;
+        for (int source : edgeMap.keySet()) {
+            for (int target : edgeMap.get(source)) {
+                try {
+                    if (assignLabelsDuringCreation) {
+                        G.createEdge(source, target);
+                    } else {
+                        G.createEdgeWithoutUpdatingPaths(source, target);
+                    }
+                } catch (Exception e) {
+                    System.out.println("Create Edge failed for " + source + " -> " + target);
+                }
+            }
+        }
+
+        //Assign labels for a new hierarchy with DF Exploration.
+        if (!assignLabelsDuringCreation) {
+            preProcessor P = new preProcessor();
+            G = P.assignLabels(G);
+        }
+        return G;
     }
 
 
@@ -86,7 +98,6 @@ public class testUtils {
         return lowestNode;
 
     }
-    //Make this private in this class
 
     private void dfs(vertex source, vertex target) {
         if (source.Id == target.Id) {
@@ -102,22 +113,37 @@ public class testUtils {
     }
 
 
-    public List<LSCAResult> testAllPairLSCA(graph G, int numNodes) {
+    public void testAllPairLSCA(graph G) {
         List<LSCAResult> lscaRestults = new ArrayList<>();
+        int numNodes = G.vertices.size();
 
         for (int i = 1; i <= numNodes; i++) {
             for (int j = i + 1; j <= numNodes; j++) {
                 int PLSCA = G.findPathLSCA(G, i, j);
                 int TLSCA = findTraversalLSCA(G, i, j);
-                if ((PLSCA == TLSCA) && (PLSCA != 0 && TLSCA != 0)) {
+                if (PLSCA == TLSCA && PLSCA != 0) {
                     LSCAResult result = new LSCAResult();
                     result.nodes = new int[]{i, j};
-                    result.LSCAs = new int[]{PLSCA};
+                    result.LSCAs = new int[]{PLSCA, TLSCA};
                     result.status = true;
+                    lscaRestults.add(result);
+                } else {
+                    LSCAResult result = new LSCAResult();
+                    result.nodes = new int[]{i, j};
+                    result.LSCAs = new int[]{PLSCA, TLSCA};
+                    result.status = false;
                     lscaRestults.add(result);
                 }
             }
         }
-        return lscaRestults;
+
+        System.out.println("Total Pairs examined: " + lscaRestults.size());
+        for (LSCAResult p : lscaRestults) {
+            System.out.print("Nodes: " + p.nodes[0] + " " + p.nodes[1] + " LSCA:");
+            for (int n : p.LSCAs) {
+                System.out.print(n + " ");
+            }
+            System.out.println(" Status: " + p.status);
+        }
     }
 }
