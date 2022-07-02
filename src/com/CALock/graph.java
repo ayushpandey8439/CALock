@@ -12,7 +12,7 @@ public class graph {
     private int nodecounter;
 
     public graph() {
-        this.vertices = new HashMap<Integer, vertex>();
+        this.vertices = new HashMap<>();
         this.nodecounter = 1;
 
     }
@@ -34,8 +34,8 @@ public class graph {
         int lowestNode = 0;
         for (int i = 0; i < shortestPath.length; i++) {
             boolean isCommon = true;
-            for (int j = 0; j < studyPaths.length; j++) {
-                if (studyPaths[j][i] != shortestPath[i]) {
+            for (int[] studyPath : studyPaths) {
+                if (studyPath[i] != shortestPath[i]) {
                     isCommon = false;
                     break;
                 }
@@ -50,7 +50,7 @@ public class graph {
         return lowestNode;
     }
 
-    public void addVertex(int data) throws Exception {
+    public void addVertex(int data) {
         this.vertices.put(nodecounter, new vertex(nodecounter, data));
         this.nodecounter++;
     }
@@ -80,7 +80,7 @@ public class graph {
         }
     }
 
-    public void removeEdge(int s, int t) throws Exception {
+    public void removeEdge(int s, int t) {
         vertex source = this.vertices.get(s);
         vertex target = this.vertices.get(t);
 

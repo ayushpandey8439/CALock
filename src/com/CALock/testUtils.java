@@ -2,9 +2,18 @@ package com.CALock;
 
 import org.apache.commons.lang3.ArrayUtils;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
-import static org.apache.commons.lang3.RandomUtils.nextInt;
+class LSCAResult {
+    public int[] nodes;
+
+    public int[] LSCAs;
+
+    public boolean status;
+
+}
 
 public class testUtils {
 
@@ -16,7 +25,7 @@ public class testUtils {
     public static HashMap<Integer, int[]> createRandomDAG(int numNodes) {
         HashMap<Integer, int[]> edgeMap = new HashMap<Integer, int[]>();
 
-        for (int i = 1; i <= numNodes; i++) {
+        /*for (int i = 1; i <= numNodes; i++) {
             int childCount = nextInt(i, numNodes + 1);
             int[] childList = new int[]{};
             for (int j = 1; j <= childCount; j++) {
@@ -28,14 +37,15 @@ public class testUtils {
             edgeMap.put(i, childList);
         }
 
-        /*
+         */
+
         edgeMap.put(1, new int[]{2, 6});
         edgeMap.put(4, new int[]{5});
         edgeMap.put(2, new int[]{3, 8, 5});
         edgeMap.put(3, new int[]{4});
         edgeMap.put(6, new int[]{7});
         edgeMap.put(7, new int[]{5});
-         */
+
 
         return edgeMap;
     }
@@ -92,17 +102,22 @@ public class testUtils {
     }
 
 
-    public String[] testAllPairLSCA(graph G, int numNodes) {
-        String[] failedPairs = new String[]{};
+    public List<LSCAResult> testAllPairLSCA(graph G, int numNodes) {
+        List<LSCAResult> lscaRestults = new ArrayList<>();
+
         for (int i = 1; i <= numNodes; i++) {
             for (int j = i + 1; j <= numNodes; j++) {
                 int PLSCA = G.findPathLSCA(G, i, j);
                 int TLSCA = findTraversalLSCA(G, i, j);
-                if ((PLSCA != TLSCA) && (PLSCA != 0 && TLSCA != 0)) {
-                    failedPairs = ArrayUtils.addAll(failedPairs, "" + i + " " + j);
+                if ((PLSCA == TLSCA) && (PLSCA != 0 && TLSCA != 0)) {
+                    LSCAResult result = new LSCAResult();
+                    result.nodes = new int[]{i, j};
+                    result.LSCAs = new int[]{PLSCA};
+                    result.status = true;
+                    lscaRestults.add(result);
                 }
             }
         }
-        return failedPairs;
+        return lscaRestults;
     }
 }

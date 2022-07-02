@@ -5,7 +5,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import static com.CALock.pathHelper.shortensPrefix;
 
 public class preProcessor {
-    public graph assignLabels(graph G, vertex v) {
+    public graph assignLabels(graph G) {
         G.root.highPath = new int[]{G.root.Id};
         G.root.lowPath = new int[]{G.root.Id};
         for (vertex c : G.root.children.values()) {
