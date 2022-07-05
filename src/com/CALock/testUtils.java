@@ -67,16 +67,16 @@ public class testUtils {
         }
 
         if (roots.length > 1) {
-            int newRoot = G.addVertex(0);
-            G.root = G.vertices.get(newRoot);
-
+            G.root = G.sentinel;
             for (vertex r : roots) {
                 try {
-                    G.createEdge(newRoot, r.Id);
+                    G.createEdge(G.sentinel.Id, r.Id);
                 } catch (Exception e) {
-                    System.out.println("Create Edge failed for " + newRoot + " -> " + r.Id);
+                    System.out.println("Create Edge failed for " + G.sentinel + " -> " + r.Id);
                 }
             }
+        } else {
+
         }
 
         return G;
@@ -87,7 +87,6 @@ public class testUtils {
         this.DFSPaths = new int[][]{};
         for (int v : V) {
             dfs(G.root, G.vertices.get(v));
-            //AllDFSPaths = ArrayUtils.addAll(AllDFSPaths, );
         }
 
 
@@ -140,19 +139,11 @@ public class testUtils {
             for (int j = i + 1; j <= numNodes; j++) {
                 int PLSCA = G.findPathLSCA(G, i, j);
                 int TLSCA = findTraversalLSCA(G, i, j);
-                if (PLSCA == TLSCA && PLSCA != 0) {
-                    LSCAResult result = new LSCAResult();
-                    result.nodes = new int[]{i, j};
-                    result.LSCAs = new int[]{PLSCA, TLSCA};
-                    result.status = true;
-                    lscaRestults.add(result);
-                } else {
-                    LSCAResult result = new LSCAResult();
-                    result.nodes = new int[]{i, j};
-                    result.LSCAs = new int[]{PLSCA, TLSCA};
-                    result.status = false;
-                    lscaRestults.add(result);
-                }
+                LSCAResult result = new LSCAResult();
+                result.nodes = new int[]{i, j};
+                result.LSCAs = new int[]{PLSCA, TLSCA};
+                result.status = PLSCA == TLSCA && PLSCA != 0; // This was set to zero Imagine why?
+                lscaRestults.add(result);
             }
         }
 

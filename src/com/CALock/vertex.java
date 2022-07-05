@@ -20,4 +20,17 @@ public class vertex {
         this.LSCAPathLength = 0;
         this.data = data;
     }
+
+    public void initialiseVertexMetadata() {
+        this.children = new HashMap<Integer, vertex>();
+        this.parents = new HashMap<Integer, vertex>();
+        this.lowPath = new int[]{this.Id};
+        this.highPath = new int[]{this.Id};
+        this.LSCAPathLength = 0;
+        this.data = this.data;
+    }
+
+    public boolean isSentinel() {
+        return this.Id == 0;
+    }
 }

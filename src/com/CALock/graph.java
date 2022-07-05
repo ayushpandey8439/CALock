@@ -9,10 +9,13 @@ import static com.CALock.pathHelper.shortensPrefix;
 public class graph {
     HashMap<Integer, vertex> vertices;
     vertex root;
+    vertex sentinel;
     private int nodecounter;
 
     public graph() {
         this.vertices = new HashMap<>();
+        this.sentinel = new vertex(0, 0);
+        //this.vertices.put(this.sentinel.Id, this.sentinel);
         this.nodecounter = 1;
 
     }
@@ -50,10 +53,9 @@ public class graph {
         return lowestNode;
     }
 
-    public int addVertex(int data) {
+    public void addVertex(int data) {
         this.vertices.put(nodecounter, new vertex(nodecounter, data));
         this.nodecounter++;
-        return nodecounter - 1;
 
     }
 
