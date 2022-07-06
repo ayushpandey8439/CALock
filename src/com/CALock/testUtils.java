@@ -1,10 +1,10 @@
 package com.CALock;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+import java.util.Map;
 
 class LSCAResult {
     public int[] nodes;
@@ -33,9 +33,12 @@ public class testUtils {
         G.root = G.vertices.get(1);
 
         HashMap<Integer, int[]> edgeMap = new HashMap<>();
-        edgeMap.put(1, new int[]{2});
-        edgeMap.put(3, new int[]{2});
-        edgeMap.put(4, new int[]{2});
+        edgeMap.put(1, new int[]{2, 6});
+        edgeMap.put(2, new int[]{3, 5, 8});
+        edgeMap.put(3, new int[]{4});
+        edgeMap.put(4, new int[]{5});
+        edgeMap.put(6, new int[]{7});
+        edgeMap.put(7, new int[]{5});
 
         for (int source : edgeMap.keySet()) {
             for (int target : edgeMap.get(source)) {
@@ -61,12 +64,13 @@ public class testUtils {
         // If there is more than one root node then create a sentinel root above all of them.
         vertex[] roots = new vertex[]{};
         for (vertex v : G.vertices.values()) {
-            if (v.parents.size() == 0) {
+            if (v.parents.size() == 0 && !v.isSentinel()) {
                 roots = ArrayUtils.addAll(roots, v);
             }
         }
 
         if (roots.length > 1) {
+            G.vertices.put(G.sentinel.Id, G.sentinel);
             G.root = G.sentinel;
             for (vertex r : roots) {
                 try {
@@ -76,7 +80,10 @@ public class testUtils {
                 }
             }
         } else {
-
+            G.root = roots[0];
+            G.sentinel.initialiseVertexMetadata();
+            G.root.parents = new HashMap<>();
+            G.vertices.remove(G.sentinel.Id);
         }
 
         return G;
@@ -132,23 +139,26 @@ public class testUtils {
 
 
     public void testAllPairLSCA(graph G) {
-        List<LSCAResult> lscaRestults = new ArrayList<>();
-        int numNodes = G.vertices.size();
+        Map<Pair<Integer, Integer>, LSCAResult> lscaResults = new HashMap<>();
+        for (vertex a : G.vertices.values()) {
+            for (vertex b : G.vertices.values()) {
+                Pair<Integer, Integer> key = Pair.of(a.Id, b.Id);
+                Pair<Integer, Integer> keyR = Pair.of(b.Id, a.Id);
+                if (lscaResults.get(key) == null && lscaResults.get(keyR) == null) {
+                    int PLSCA = G.findPathLSCA(G, a.Id, b.Id);
+                    int TLSCA = findTraversalLSCA(G, a.Id, b.Id);
+                    LSCAResult result = new LSCAResult();
+                    result.nodes = new int[]{a.Id, b.Id};
+                    result.LSCAs = new int[]{PLSCA, TLSCA};
+                    result.status = PLSCA == TLSCA; // This was set to zero Imagine why?
+                    lscaResults.put(key, result);
+                }
 
-        for (int i = 1; i <= numNodes; i++) {
-            for (int j = i + 1; j <= numNodes; j++) {
-                int PLSCA = G.findPathLSCA(G, i, j);
-                int TLSCA = findTraversalLSCA(G, i, j);
-                LSCAResult result = new LSCAResult();
-                result.nodes = new int[]{i, j};
-                result.LSCAs = new int[]{PLSCA, TLSCA};
-                result.status = PLSCA == TLSCA && PLSCA != 0; // This was set to zero Imagine why?
-                lscaRestults.add(result);
             }
         }
 
-        System.out.println("Total Pairs examined: " + lscaRestults.size());
-        for (LSCAResult p : lscaRestults) {
+        System.out.println("Total Pairs examined: " + lscaResults.size());
+        for (LSCAResult p : lscaResults.values()) {
             System.out.print("Nodes: " + p.nodes[0] + " " + p.nodes[1] + " LSCA:");
             for (int n : p.LSCAs) {
                 System.out.print(n + " ");
