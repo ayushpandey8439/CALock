@@ -6,7 +6,7 @@ import static com.CALock.testUtils.createDAG;
 public class Main {
 
     public static void main(String[] args) throws Exception {
-        int numNodes = 8;
+        int numNodes = 5;
         graph G = createDAG(numNodes, true);
         printGraph(G);
         testUtils testInstance = new testUtils();

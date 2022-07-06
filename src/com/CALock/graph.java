@@ -65,7 +65,7 @@ public class graph {
         if (source != null && target != null) {
             source.children.put(t, target);
             target.parents.put(s, source);
-            updatePath(source, target, false, source.Id, new int[]{}, new int[]{});
+            updatePath(source, target, false, source.Id, new int[]{}, new int[]{}, new HashMap<Integer, vertex>());
         } else {
             throw new Exception("Source or target missing from te graph");
         }
@@ -115,66 +115,68 @@ public class graph {
         target.LSCAPathLength = commonPathLength;
 
         for (vertex c : target.children.values()) {
-            updatePath(target, c, false, target.Id, target.lowPath, target.highPath);
+            updatePath(target, c, false, target.Id, target.lowPath, target.highPath, new HashMap<Integer, vertex>());
         }
     }
 
-    private void updatePath(vertex source, vertex target, boolean isInherited, int inheritedFrom, int[] inheritedLow, int[] inheritedHigh) {
-        boolean updated = false;
-        if (isInherited) {
-            if (target.lowPath[0] == inheritedFrom) {
-                target.lowPath = ArrayUtils.addAll(ArrayUtils.subarray(inheritedLow, 0, inheritedLow.length), target.lowPath);
-            }
-            if (target.highPath[0] == inheritedFrom) {
-                target.highPath = ArrayUtils.addAll(ArrayUtils.subarray(inheritedHigh, 0, inheritedHigh.length), target.highPath);
-            }
-            updated = true;
+    private void updatePath(vertex source, vertex target, boolean isInherited, int inheritedFrom, int[] inheritedLow, int[] inheritedHigh, HashMap<Integer, vertex> visited) {
+        if (visited.get(source.Id) != null) {
+            return;
         } else {
-            int[] targetLowNew = ArrayUtils.addAll(source.lowPath, target.Id);
-            int[] targetHighNew = ArrayUtils.addAll(source.highPath, target.Id);
-            if (target.highPath.length == 1) {
-                target.highPath = targetHighNew;
+
+            boolean updated = false;
+            if (isInherited) {
+                if (target.lowPath[0] == inheritedFrom) {
+                    target.lowPath = ArrayUtils.addAll(ArrayUtils.subarray(inheritedLow, 0, inheritedLow.length), target.lowPath);
+                }
+                if (target.highPath[0] == inheritedFrom) {
+                    target.highPath = ArrayUtils.addAll(ArrayUtils.subarray(inheritedHigh, 0, inheritedHigh.length), target.highPath);
+                }
                 updated = true;
-            }
-            if (target.lowPath.length == 1) {
-                target.lowPath = targetLowNew;
-                updated = true;
-            }
-            if (!updated) {
-                if (shortensPrefix(targetHighNew, target.lowPath, target.LSCAPathLength)) {
+            } else {
+                int[] targetLowNew = ArrayUtils.addAll(source.lowPath, target.Id);
+                int[] targetHighNew = ArrayUtils.addAll(source.highPath, target.Id);
+                if (target.highPath.length == 1) {
                     target.highPath = targetHighNew;
                     updated = true;
-                } else if (shortensPrefix(targetLowNew, target.highPath, target.LSCAPathLength)) {
+                }
+                if (target.lowPath.length == 1) {
                     target.lowPath = targetLowNew;
                     updated = true;
                 }
-            }
-
-        }
-
-        int commonPathLength = 0;
-        for (int i = 0; i < target.lowPath.length; i++) {
-            if (target.lowPath[i] == target.highPath[i]) {
-                commonPathLength++;
-            } else {
-                break;
-            }
-        }
-
-        target.LSCAPathLength = commonPathLength;
-
-        if (updated) {
-            for (vertex child : target.children.values()) {
-                if (isInherited) {
-                    updatePath(target, child, true, inheritedFrom, inheritedLow, inheritedHigh);
-                } else {
-                    updatePath(target, child, true, target.Id, target.lowPath, target.highPath);
+                if (!updated) {
+                    if (shortensPrefix(targetHighNew, target.lowPath, target.LSCAPathLength)) {
+                        target.highPath = targetHighNew;
+                        updated = true;
+                    } else if (shortensPrefix(targetLowNew, target.highPath, target.LSCAPathLength)) {
+                        target.lowPath = targetLowNew;
+                        updated = true;
+                    }
                 }
 
             }
+
+            int commonPathLength = 0;
+            for (int i = 0; i < target.lowPath.length; i++) {
+                if (target.lowPath[i] == target.highPath[i]) {
+                    commonPathLength++;
+                } else {
+                    break;
+                }
+            }
+
+            target.LSCAPathLength = commonPathLength;
+            visited.put(source.Id, source);
+            if (updated) {
+                for (vertex child : target.children.values()) {
+                    if (isInherited) {
+                        updatePath(target, child, true, inheritedFrom, inheritedLow, inheritedHigh, visited);
+                    } else {
+                        updatePath(target, child, true, target.Id, target.lowPath, target.highPath, visited);
+                    }
+
+                }
+            }
         }
-
     }
-
-
 }

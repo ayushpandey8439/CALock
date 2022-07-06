@@ -33,12 +33,21 @@ public class testUtils {
         G.root = G.vertices.get(1);
 
         HashMap<Integer, int[]> edgeMap = new HashMap<>();
+        /* Acyclic graph with competitive edges.
         edgeMap.put(1, new int[]{2, 6});
         edgeMap.put(2, new int[]{3, 5, 8});
         edgeMap.put(3, new int[]{4});
         edgeMap.put(4, new int[]{5});
         edgeMap.put(6, new int[]{7});
         edgeMap.put(7, new int[]{5});
+
+         */
+
+        edgeMap.put(1, new int[]{2});
+        edgeMap.put(2, new int[]{3});
+        edgeMap.put(3, new int[]{4});
+        edgeMap.put(4, new int[]{5});
+        edgeMap.put(5, new int[]{2});
 
         for (int source : edgeMap.keySet()) {
             for (int target : edgeMap.get(source)) {
