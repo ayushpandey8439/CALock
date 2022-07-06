@@ -1,15 +1,14 @@
 package com.CALock;
 
 import static com.CALock.printer.printGraph;
-import static com.CALock.testUtils.createDAG;
 
 public class Main {
 
     public static void main(String[] args) throws Exception {
         int numNodes = 5;
-        graph G = createDAG(numNodes, true);
-        printGraph(G);
         testUtils testInstance = new testUtils();
+        graph G = testInstance.createDAG(numNodes, true);
+        printGraph(G);
         testInstance.testAllPairLSCA(G);
 
         //G.createEdge(1, 4);

@@ -20,7 +20,18 @@ public class testUtils {
     private int[][] DFSPaths;
     private int[] currentPath;
 
-    public static graph createDAG(int numNodes, boolean assignLabelsDuringCreation) {
+    public HashMap<Integer, int[]> createEdgeMap() {
+        HashMap<Integer, int[]> edgeMap = new HashMap<>();
+        edgeMap.put(1, new int[]{2});
+        edgeMap.put(2, new int[]{3});
+        edgeMap.put(3, new int[]{2, 4});
+        edgeMap.put(4, new int[]{5});
+        edgeMap.put(5, new int[]{3});
+
+        return edgeMap;
+    }
+
+    public graph createDAG(int numNodes, boolean assignLabelsDuringCreation) {
         graph G = new graph();
         for (int i = 1; i <= numNodes; i++) {
             try {
@@ -32,22 +43,7 @@ public class testUtils {
 
         G.root = G.vertices.get(1);
 
-        HashMap<Integer, int[]> edgeMap = new HashMap<>();
-        /* Acyclic graph with competitive edges.
-        edgeMap.put(1, new int[]{2, 6});
-        edgeMap.put(2, new int[]{3, 5, 8});
-        edgeMap.put(3, new int[]{4});
-        edgeMap.put(4, new int[]{5});
-        edgeMap.put(6, new int[]{7});
-        edgeMap.put(7, new int[]{5});
-
-         */
-
-        edgeMap.put(1, new int[]{2});
-        edgeMap.put(2, new int[]{3});
-        edgeMap.put(3, new int[]{4});
-        edgeMap.put(4, new int[]{5});
-        edgeMap.put(5, new int[]{2});
+        HashMap<Integer, int[]> edgeMap = createEdgeMap();
 
         for (int source : edgeMap.keySet()) {
             for (int target : edgeMap.get(source)) {
@@ -102,7 +98,7 @@ public class testUtils {
         this.currentPath = new int[]{G.root.Id};
         this.DFSPaths = new int[][]{};
         for (int v : V) {
-            dfs(G.root, G.vertices.get(v));
+            dfs(G.root, G.vertices.get(v), new HashMap<Integer, vertex>());
         }
 
 
@@ -133,14 +129,16 @@ public class testUtils {
 
     }
 
-    private void dfs(vertex source, vertex target) {
+    private void dfs(vertex source, vertex target, HashMap<Integer, vertex> visited) {
+        visited.put(source.Id, source);
         if (source.Id == target.Id) {
             DFSPaths = ArrayUtils.addAll(DFSPaths, currentPath);
-            return;
         } else {
             for (vertex v : source.children.values()) {
                 currentPath = ArrayUtils.addAll(currentPath, v.Id);
-                dfs(v, target);
+                if (visited.get(v.Id) == null) {
+                    dfs(v, target, visited);
+                }
                 currentPath = ArrayUtils.remove(currentPath, currentPath.length - 1);
             }
         }

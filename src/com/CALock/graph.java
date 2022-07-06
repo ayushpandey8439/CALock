@@ -63,11 +63,14 @@ public class graph {
         vertex target = this.vertices.get(t);
 
         if (source != null && target != null) {
+            if (target.parents.get(source.Id) != null) {
+                throw new Exception("Cannot create doubly linked nodes. Breaking cycle introduced!");
+            }
             source.children.put(t, target);
             target.parents.put(s, source);
             updatePath(source, target, false, source.Id, new int[]{}, new int[]{}, new HashMap<Integer, vertex>());
         } else {
-            throw new Exception("Source or target missing from te graph");
+            throw new Exception("Source or target missing from the graph!");
         }
     }
 
