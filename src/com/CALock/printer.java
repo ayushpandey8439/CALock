@@ -1,6 +1,10 @@
 package com.CALock;
 
 public class printer {
+    public static void printGraphInfo(graph G) {
+        System.out.println("Number of Vertices: " + G.vertices.size());
+    }
+
     public static void printGraph(graph G) {
         for (vertex V : G.vertices.values()) {
             System.out.print("Node: " + V.Id + " Children: [");

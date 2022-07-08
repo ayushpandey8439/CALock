@@ -27,10 +27,9 @@ public class vertex {
         this.lowPath = new int[]{this.Id};
         this.highPath = new int[]{this.Id};
         this.LSCAPathLength = 0;
-        this.data = this.data;
     }
 
     public boolean isSentinel() {
-        return this.Id == 0;
+        return this.Id == -1;
     }
 }

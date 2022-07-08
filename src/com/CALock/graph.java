@@ -10,13 +10,10 @@ public class graph {
     HashMap<Integer, vertex> vertices;
     vertex root;
     vertex sentinel;
-    private int nodecounter;
 
     public graph() {
         this.vertices = new HashMap<>();
-        this.sentinel = new vertex(0, 0);
-        this.nodecounter = 1;
-
+        this.sentinel = new vertex(-1, -1);
     }
 
     public int findPathLSCA(graph G, int... V) {
@@ -52,10 +49,8 @@ public class graph {
         return lowestNode;
     }
 
-    public void addVertex(int data) {
-        this.vertices.put(nodecounter, new vertex(nodecounter, data));
-        this.nodecounter++;
-
+    public void addVertex(int id, int data) {
+        this.vertices.put(id, new vertex(id, data));
     }
 
     public void createEdge(int s, int t) throws Exception {
@@ -130,10 +125,10 @@ public class graph {
             boolean updated = false;
             if (isInherited) {
                 if (target.lowPath[0] == inheritedFrom) {
-                    target.lowPath = ArrayUtils.addAll(ArrayUtils.subarray(inheritedLow, 0, inheritedLow.length), target.lowPath);
+                    target.lowPath = ArrayUtils.addAll(ArrayUtils.subarray(inheritedLow, 0, inheritedLow.length - 1), target.lowPath);
                 }
                 if (target.highPath[0] == inheritedFrom) {
-                    target.highPath = ArrayUtils.addAll(ArrayUtils.subarray(inheritedHigh, 0, inheritedHigh.length), target.highPath);
+                    target.highPath = ArrayUtils.addAll(ArrayUtils.subarray(inheritedHigh, 0, inheritedHigh.length - 1), target.highPath);
                 }
                 updated = true;
             } else {
@@ -151,9 +146,9 @@ public class graph {
                     if (shortensPrefix(targetHighNew, target.lowPath, target.LSCAPathLength)) {
                         target.highPath = targetHighNew;
                         updated = true;
-                    } else if (shortensPrefix(targetLowNew, target.highPath, target.LSCAPathLength)) {
+                    }
+                    if (!updated && shortensPrefix(targetLowNew, target.highPath, target.LSCAPathLength)) {
                         target.lowPath = targetLowNew;
-                        updated = true;
                     }
                 }
 
@@ -170,14 +165,11 @@ public class graph {
 
             target.LSCAPathLength = commonPathLength;
             visited.put(source.Id, source);
-            if (updated) {
-                for (vertex child : target.children.values()) {
-                    if (isInherited) {
-                        updatePath(target, child, true, inheritedFrom, inheritedLow, inheritedHigh, visited);
-                    } else {
-                        updatePath(target, child, true, target.Id, target.lowPath, target.highPath, visited);
-                    }
-
+            for (vertex child : target.children.values()) {
+                if (isInherited) {
+                    updatePath(target, child, true, inheritedFrom, inheritedLow, inheritedHigh, visited);
+                } else {
+                    updatePath(target, child, true, target.Id, target.lowPath, target.highPath, visited);
                 }
             }
         }
