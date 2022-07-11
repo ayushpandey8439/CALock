@@ -15,9 +15,9 @@ class LSCAResult {
 
 public class testUtils {
 
-    private final HashMap<Integer, vertex> visitedInExploration = new HashMap<>();
     private int[][] DFSPaths;
     private int[] currentPath;
+
 
     public static HashMap<Integer, int[]> createEdgeMap() {
         HashMap<Integer, int[]> edgeMap = new HashMap<>();
@@ -55,27 +55,61 @@ public class testUtils {
     }
 
     // Function to find the root vertex of a graph
-    public vertex findRootVertex(graph G) {
-        vertex root = null;
+    public void createRootVertex(graph G) {
+        HashMap<Integer, vertex> rootCandidates = new HashMap<>();
         for (vertex v : G.vertices.values()) {
-            if (visitedInExploration.get(v.Id) == null) {
-                dfExplore(v);
-                if (visitedInExploration.equals(G.vertices)) {
-                    root = v;
+            if (v.parents.size() == 0 && !v.isSentinel()) {
+                rootCandidates.put(v.Id, v);
+            }
+        } //If no roots are detected, then find a node that has paths leading to all the vertices except itself.
+        if (rootCandidates.size() == 0) {
+            int reachabilityCount = G.vertices.size();
+            for (vertex v : G.vertices.values()) {
+                Set<vertex> visitedInExploration = new HashSet<>(G.vertices.values());
+                Set<vertex> unreachable = dfExplore(v, visitedInExploration);
+                if (unreachable.size() == 0) {
+                    rootCandidates = new HashMap<>();
+                    rootCandidates.put(v.Id, v);
                     break;
+
+                } else if (reachabilityCount > unreachable.size()) {
+                    reachabilityCount = unreachable.size();
+                    rootCandidates = new HashMap<>();
+                    rootCandidates.put(v.Id, v);
                 }
             }
+        } // If there is a single node with no incoming edges, make it root.
+        if (rootCandidates.size() == 1) {
+            for (vertex p : G.sentinel.children.values()) {
+                p.parents.remove(G.sentinel.Id);
+            }
+            G.vertices.remove(G.sentinel.Id);
+            G.sentinel.initialiseVertexMetadata();
+            G.root = G.vertices.values().iterator().next();
+        } // If there is are multiple nodes with no incoming edges, create a sentinel.
+
+        else {
+            rootCandidates.size();
+            G.vertices.put(G.sentinel.Id, G.sentinel);
+            for (vertex r : rootCandidates.values()) {
+                try {
+                    G.createEdge(G.sentinel.Id, r.Id);
+                } catch (Exception e) {
+                    System.out.println("Create Edge failed for " + G.sentinel + " -> " + r.Id);
+                }
+            }
+            G.root = G.sentinel;
         }
-        return root;
     }
 
-    private void dfExplore(vertex v) {
-        visitedInExploration.put(v.Id, v);
-        for (vertex c : v.children.values()) {
-            if (visitedInExploration.get(c.Id) == null) {
-                dfExplore(c);
-            }
+    private Set<vertex> dfExplore(vertex v, Set<vertex> visitedInExploration) {
+        if (!visitedInExploration.remove(v)) {
+            return visitedInExploration;
         }
+        for (vertex c : v.children.values()) {
+            dfExplore(c, visitedInExploration);
+        }
+        return visitedInExploration;
     }
 
     public graph createDAG(HashMap<Integer, int[]> edgeMap, boolean assignLabelsDuringCreation) {
@@ -101,41 +135,12 @@ public class testUtils {
         }
 
         //Assign labels for a new hierarchy with DF Exploration.
+        createRootVertex(G);
         if (!assignLabelsDuringCreation) {
             preProcessor P = new preProcessor();
             G = P.assignLabels(G);
         }
 
-        // Any node without a parent is considered a root.
-        // If there is more than one root node then create a sentinel root above all of them.
-        // If the root is involved in a cycle then we need an explicit definition of the root node.
-        vertex[] roots = new vertex[]{};
-        for (vertex v : G.vertices.values()) {
-            if (v.parents.size() == 0 && !v.isSentinel()) {
-                roots = ArrayUtils.addAll(roots, v);
-            }
-        }
-
-        if (roots.length > 1) {
-            G.vertices.put(G.sentinel.Id, G.sentinel);
-            G.root = G.sentinel;
-            for (vertex r : roots) {
-                try {
-                    G.createEdge(G.sentinel.Id, r.Id);
-                } catch (Exception e) {
-                    System.out.println("Create Edge failed for " + G.sentinel + " -> " + r.Id);
-                }
-            }
-        } else {
-            for (vertex p : G.sentinel.children.values()) {
-                p.parents.remove(G.sentinel.Id);
-            }
-            G.vertices.remove(G.sentinel.Id);
-            G.sentinel.initialiseVertexMetadata();
-            G.root = findRootVertex(G);
-            preProcessor P = new preProcessor();
-            G = P.assignLabels(G);
-        }
 
         /*else if (roots.length == 0) {
             G.root = G.vertices.get(1);//TODO: Either get the user to manually define the root or have the root discovery algorithm run its course.
@@ -212,15 +217,8 @@ public class testUtils {
         for (int i = 0; i < numPairs; i++) {
             int key1 = keys.get(rand.nextInt(keys.size()));
             int key2 = keys.get(rand.nextInt(keys.size()));
-
             Pair<Integer, Integer> key = Pair.of(key1, key2);
             if (lscaResults.get(key) == null) {
-                int PLSCA = G.findPathLSCA(G, key1, key2);
-                int TLSCA = findTraversalLSCA(G, key1, key2);
-                LSCAResult result = new LSCAResult();
-                result.nodes = new int[]{key1, key2};
-                result.LSCAs = new int[]{PLSCA, TLSCA};
-                result.status = PLSCA == TLSCA; // This was set to zero Imagine why?
                 System.out.print("Node: " + key1);
                 System.out.print(" LowPath: ");
                 for (int p : G.vertices.get(key1).lowPath) {
@@ -239,6 +237,12 @@ public class testUtils {
                 for (int p : G.vertices.get(key2).highPath) {
                     System.out.print(p + ",");
                 }
+                int PLSCA = G.findPathLSCA(G, key1, key2);
+                int TLSCA = findTraversalLSCA(G, key1, key2);
+                LSCAResult result = new LSCAResult();
+                result.nodes = new int[]{key1, key2};
+                result.LSCAs = new int[]{PLSCA, TLSCA};
+                result.status = PLSCA == TLSCA; // This was set to zero Imagine why?
                 System.out.println("\n\tPLSCA:" + PLSCA + " TLSCA: " + TLSCA + " Status: " + result.status);
                 lscaResults.put(key, result);
             }

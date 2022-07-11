@@ -2,20 +2,18 @@ package com.CALock;
 
 import java.util.HashMap;
 
-import static com.CALock.printer.printGraphInfo;
-
 public class Main {
     //TODO: the first node created is always considered as the root. So tread carefully.
 
     public static void main(String[] args) throws Exception {
         testUtils testInstance = new testUtils();
-        HashMap<Integer, int[]> edgeMap = testUtils.createEdgeMap("/Users/pandey/work/CALock/datasets/multiRootDag.txt", ",");
+        HashMap<Integer, int[]> edgeMap = testUtils.createEdgeMap("/Users/pandey/work/CALock/datasets/webNotreDame.txt", ",");
         long singleCreateStart = System.currentTimeMillis();
         graph G1 = testInstance.createDAG(edgeMap, true);
         long singleCreateEnd = System.currentTimeMillis();
         System.out.println("Single Insertion took " + (float) (singleCreateEnd - singleCreateStart) / 1000 + "s");
-        printGraphInfo(G1);
-        testInstance.testAllPairLSCA(G1);
+        printer.printGraphInfo(G1);
+        testInstance.testRandomPairLSCA(G1, 1);
 
         /*
         long massiveCreateStart = System.currentTimeMillis();

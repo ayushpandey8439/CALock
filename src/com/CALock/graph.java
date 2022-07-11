@@ -130,7 +130,6 @@ public class graph {
                 if (target.highPath[0] == inheritedFrom) {
                     target.highPath = ArrayUtils.addAll(ArrayUtils.subarray(inheritedHigh, 0, inheritedHigh.length - 1), target.highPath);
                 }
-                updated = true;
             } else {
                 int[] targetLowNew = ArrayUtils.addAll(source.lowPath, target.Id);
                 int[] targetHighNew = ArrayUtils.addAll(source.highPath, target.Id);
