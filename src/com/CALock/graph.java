@@ -11,10 +11,83 @@ public class graph {
     vertex root;
     vertex sentinel;
 
-    public graph() {
+    graph() {
         this.vertices = new HashMap<>();
         this.sentinel = new vertex(-1, -1);
     }
+
+    graph(graphDefinition G, boolean assignLabelsDuringCreation) {
+        this.vertices = new HashMap<>();
+        this.sentinel = new vertex(-1, -1);
+
+        for (int source : G.edges.keySet()) {
+            for (int target : G.edges.get(source)) {
+                if (this.vertices.get(source) == null) {
+                    this.addVertex(source, source);
+                }
+                if (this.vertices.get(target) == null) {
+                    this.addVertex(target, target);
+                }
+                try {
+                    if (assignLabelsDuringCreation) {
+                        this.createEdge(source, target);
+                    } else {
+                        this.createEdgeWithoutUpdatingPaths(source, target);
+                    }
+                } catch (Exception e) {
+                    System.out.println("Create Edge failed for " + source + " -> " + target);
+                }
+            }
+        }
+
+        //Assign labels for a new hierarchy with DF Exploration.
+        try {
+            if (G.root != -2) {
+                this.root = this.vertices.get(G.root);
+            } else {
+                this.findRootVertex();
+            }
+
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+        if (!assignLabelsDuringCreation) {
+            preProcessor P = new preProcessor();
+            P.assignLabels(this);
+        }
+
+    }
+
+    private void findRootVertex() throws Exception {
+        HashMap<Integer, vertex> rootCandidates = new HashMap<>();
+        for (vertex v : this.vertices.values()) {
+            if (v.parents.size() == 0 && !v.isSentinel()) {
+                rootCandidates.put(v.Id, v);
+            }
+        }
+        // If there is a single node with no incoming edges, make it root.
+        if (rootCandidates.size() == 1) {
+            for (vertex p : this.sentinel.children.values()) {
+                p.parents.remove(this.sentinel.Id);
+            }
+            this.vertices.remove(this.sentinel.Id);
+            this.sentinel.initialiseVertexMetadata();
+            this.root = this.vertices.values().iterator().next();
+        }// If there is are multiple nodes with no incoming edges, create a sentinel.
+        else if (rootCandidates.size() >= 1) {
+            rootCandidates.size();
+            this.vertices.put(this.sentinel.Id, this.sentinel);
+            for (vertex r : rootCandidates.values()) {
+                try {
+                    this.createEdge(this.sentinel.Id, r.Id);
+                } catch (Exception e) {
+                    System.out.println("Create Edge failed for " + this.sentinel + " -> " + r.Id);
+                }
+            }
+            this.root = this.sentinel;
+        }
+    }
+    
 
     public int findPathLSCA(graph G, int... V) {
         int[][] studyPaths = new int[][]{};
@@ -150,9 +223,7 @@ public class graph {
                         target.lowPath = targetLowNew;
                     }
                 }
-
             }
-
             int commonPathLength = 0;
             for (int i = 0; i < target.lowPath.length; i++) {
                 if (target.lowPath[i] == target.highPath[i]) {

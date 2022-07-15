@@ -29,12 +29,13 @@ public class testUtils {
         return edgeMap;
     }
 
-    public static HashMap<Integer, int[]> createEdgeMap(String filepath, String separator) {
+    public graphDefinition createEdgeMap(String filepath, String separator) {
         HashMap<Integer, int[]> edgeMap = new HashMap<>();
+        int root = -2;
         try (BufferedReader br = new BufferedReader(new FileReader(filepath))) {
             String line = br.readLine();
             while (line != null) {
-                if (line.charAt(0) != '#') {
+                if (line.charAt(0) != 'R') {
                     String[] edge = line.split(separator);
                     int source = Integer.parseInt(edge[0]);
                     int target = Integer.parseInt(edge[1]);
@@ -44,119 +45,20 @@ public class testUtils {
                     } else {
                         edgeMap.put(source, ArrayUtils.addAll(edgeSet, target));
                     }
+                } else if (line.charAt(0) == 'R') {
+                    root = Integer.parseInt(line.split(separator)[1]);
                 }
-
                 line = br.readLine();
             }
+
+
         } catch (Exception e) {
             System.out.println("Could not add line to the edgemap");
         }
-        return edgeMap;
+
+        return new graphDefinition(edgeMap, root);
     }
 
-    // Function to find the root vertex of a graph
-    public void createRootVertex(graph G) {
-        HashMap<Integer, vertex> rootCandidates = new HashMap<>();
-        for (vertex v : G.vertices.values()) {
-            if (v.parents.size() == 0 && !v.isSentinel()) {
-                rootCandidates.put(v.Id, v);
-            }
-        } //If no roots are detected, then find a node that has paths leading to all the vertices except itself.
-        if (rootCandidates.size() == 0) {
-            int reachabilityCount = G.vertices.size();
-            for (vertex v : G.vertices.values()) {
-                Set<vertex> visitedInExploration = new HashSet<>(G.vertices.values());
-                Set<vertex> unreachable = dfExplore(v, visitedInExploration);
-                if (unreachable.size() == 0) {
-                    rootCandidates = new HashMap<>();
-                    rootCandidates.put(v.Id, v);
-                    break;
-
-                } else if (reachabilityCount > unreachable.size()) {
-                    reachabilityCount = unreachable.size();
-                    rootCandidates = new HashMap<>();
-                    rootCandidates.put(v.Id, v);
-                }
-            }
-        } // If there is a single node with no incoming edges, make it root.
-        if (rootCandidates.size() == 1) {
-            for (vertex p : G.sentinel.children.values()) {
-                p.parents.remove(G.sentinel.Id);
-            }
-            G.vertices.remove(G.sentinel.Id);
-            G.sentinel.initialiseVertexMetadata();
-            G.root = G.vertices.values().iterator().next();
-        } // If there is are multiple nodes with no incoming edges, create a sentinel.
-
-        else {
-            rootCandidates.size();
-            G.vertices.put(G.sentinel.Id, G.sentinel);
-            for (vertex r : rootCandidates.values()) {
-                try {
-                    G.createEdge(G.sentinel.Id, r.Id);
-                } catch (Exception e) {
-                    System.out.println("Create Edge failed for " + G.sentinel + " -> " + r.Id);
-                }
-            }
-            G.root = G.sentinel;
-        }
-    }
-
-    private Set<vertex> dfExplore(vertex v, Set<vertex> visitedInExploration) {
-        if (!visitedInExploration.remove(v)) {
-            return visitedInExploration;
-        }
-        for (vertex c : v.children.values()) {
-            dfExplore(c, visitedInExploration);
-        }
-        return visitedInExploration;
-    }
-
-    public graph createDAG(HashMap<Integer, int[]> edgeMap, boolean assignLabelsDuringCreation) {
-        graph G = new graph();
-        for (int source : edgeMap.keySet()) {
-            for (int target : edgeMap.get(source)) {
-                if (G.vertices.get(source) == null) {
-                    G.addVertex(source, source);
-                }
-                if (G.vertices.get(target) == null) {
-                    G.addVertex(target, target);
-                }
-                try {
-                    if (assignLabelsDuringCreation) {
-                        G.createEdge(source, target);
-                    } else {
-                        G.createEdgeWithoutUpdatingPaths(source, target);
-                    }
-                } catch (Exception e) {
-                    System.out.println("Create Edge failed for " + source + " -> " + target);
-                }
-            }
-        }
-
-        //Assign labels for a new hierarchy with DF Exploration.
-        createRootVertex(G);
-        if (!assignLabelsDuringCreation) {
-            preProcessor P = new preProcessor();
-            G = P.assignLabels(G);
-        }
-
-
-        /*else if (roots.length == 0) {
-            G.root = G.vertices.get(1);//TODO: Either get the user to manually define the root or have the root discovery algorithm run its course.
-            HashMap<Integer, vertex> possibleRoots = discoverRoots(G);
-
-        } else {
-            G.sentinel.initialiseVertexMetadata();
-            G.root.parents = new HashMap<>();
-            G.vertices.remove(G.sentinel.Id);
-            G.root = G.vertices.values().iterator().next();// TODO: I am making the first node the root of the tree which might be a bad idea.
-            HashMap<Integer, vertex> possibleRoots = discoverRoots(G);
-        }
-
-         */
-        return G;
-    }
 
     private int findTraversalLSCA(graph G, int... V) {
         this.currentPath = new int[]{G.root.Id};
@@ -203,7 +105,7 @@ public class testUtils {
                 if (visited.get(v.Id) == null) {
                     dfs(v, target, visited);
                 }
-                visited.remove(v.Id);
+                //visited.remove(v.Id);
                 currentPath = ArrayUtils.remove(currentPath, currentPath.length - 1);
             }
         }
@@ -268,17 +170,8 @@ public class testUtils {
                     System.out.println("Nodes: " + a.Id + " " + b.Id + " LSCA:" + PLSCA + " TLSCA: " + TLSCA + " Status: " + result.status);
                     lscaResults.put(key, result);
                 }
-
             }
         }
-
         System.out.println("Total Pairs examined: " + lscaResults.size());
-        /*for (LSCAResult p : lscaResults.values()) {
-            System.out.print("Nodes: " + p.nodes[0] + " " + p.nodes[1] + " LSCA:");
-            for (int n : p.LSCAs) {
-                System.out.print(n + " ");
-            }
-            System.out.println(" Status: " + p.status);
-        }*/
     }
 }
