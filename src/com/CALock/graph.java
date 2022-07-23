@@ -3,6 +3,8 @@ package com.CALock;
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 import static com.CALock.pathHelper.shortensPrefix;
 
@@ -81,13 +83,33 @@ public class graph {
                 try {
                     this.createEdge(this.sentinel.Id, r.Id);
                 } catch (Exception e) {
-                    System.out.println("Create Edge failed for " + this.sentinel + " -> " + r.Id);
+                    System.out.println("Create Edge failed when assigning a new root " + this.sentinel + " -> " + r.Id);
                 }
             }
             this.root = this.sentinel;
+        }// If there is no definite root, we need to find the node that gives us complete reachability
+        else {
+            for(int v: this.vertices.keySet() ){
+                HashSet<Integer> connectedSubcomponent = this.dfExplore(v, new HashSet<>());
+                if(connectedSubcomponent.size()==this.vertices.size()){
+                    this.root = this.vertices.get(v);
+                    break;
+                }
+            }
+            throw new RuntimeException("No node in the graph ensures reachability. Please reconfigure the graph");
         }
     }
-    
+
+    private HashSet<Integer> dfExplore(int v, HashSet<Integer> reachable){
+        if(this.vertices.containsKey(v) && !reachable.contains(v)){
+            Set<Integer> targets = this.vertices.get(v).children.keySet();
+            reachable.add(v);
+            for (int c : targets) {
+                dfExplore(c, reachable);
+            }
+        }
+        return reachable;
+    }
 
     public int findPathLSCA(graph G, int... V) {
         int[][] studyPaths = new int[][]{};
@@ -131,12 +153,9 @@ public class graph {
         vertex target = this.vertices.get(t);
 
         if (source != null && target != null) {
-            if (target.parents.get(source.Id) != null) {
-                throw new Exception("Cannot create doubly linked nodes. Breaking cycle introduced!");
-            }
             source.children.put(t, target);
             target.parents.put(s, source);
-            updatePath(source, target, false, source.Id, new int[]{}, new int[]{}, new HashMap<Integer, vertex>());
+            updatePath(source, target, false, source.Id, new int[]{}, new int[]{}, new HashSet<>());
         } else {
             throw new Exception("Source or target missing from the graph!");
         }
@@ -186,22 +205,24 @@ public class graph {
         target.LSCAPathLength = commonPathLength;
 
         for (vertex c : target.children.values()) {
-            updatePath(target, c, false, target.Id, target.lowPath, target.highPath, new HashMap<Integer, vertex>());
+            updatePath(target, c, false, target.Id, target.lowPath, target.highPath, new HashSet<>());
         }
     }
 
-    private void updatePath(vertex source, vertex target, boolean isInherited, int inheritedFrom, int[] inheritedLow, int[] inheritedHigh, HashMap<Integer, vertex> visited) {
-        if (visited.get(source.Id) != null) {
+    private void updatePath(vertex source, vertex target, boolean isInherited, int inheritedFrom, int[] inheritedLow, int[] inheritedHigh, HashSet<Integer> visited) {
+        if (visited.contains(source.Id)) {
             return;
         } else {
-
+            visited.add(target.Id);
             boolean updated = false;
             if (isInherited) {
                 if (target.lowPath[0] == inheritedFrom) {
                     target.lowPath = ArrayUtils.addAll(ArrayUtils.subarray(inheritedLow, 0, inheritedLow.length - 1), target.lowPath);
+                    updated = true;
                 }
                 if (target.highPath[0] == inheritedFrom) {
                     target.highPath = ArrayUtils.addAll(ArrayUtils.subarray(inheritedHigh, 0, inheritedHigh.length - 1), target.highPath);
+                    updated = true;
                 }
             } else {
                 int[] targetLowNew = ArrayUtils.addAll(source.lowPath, target.Id);
@@ -233,15 +254,19 @@ public class graph {
                 }
             }
 
+
             target.LSCAPathLength = commonPathLength;
-            visited.put(source.Id, source);
-            for (vertex child : target.children.values()) {
-                if (isInherited) {
-                    updatePath(target, child, true, inheritedFrom, inheritedLow, inheritedHigh, visited);
-                } else {
-                    updatePath(target, child, true, target.Id, target.lowPath, target.highPath, visited);
+
+            if (updated) {
+                for (vertex child : target.children.values()) {
+                    if (isInherited) {
+                        updatePath(target, child, true, inheritedFrom, inheritedLow, inheritedHigh, visited);
+                    } else {
+                        updatePath(target, child, true, target.Id, target.lowPath, target.highPath, visited);
+                    }
                 }
             }
+
         }
     }
 }

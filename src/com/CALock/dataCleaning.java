@@ -8,15 +8,17 @@ import java.nio.file.Path;
 import java.util.HashMap;
 
 public class dataCleaning {
+    HashMap<Integer, int[]> reachableMap = new HashMap<>();
 
-    public HashMap<Integer, int[]> getConnectedComponents(int v, HashMap<Integer, int[]> edgeMap, HashMap<Integer, int[]> reachableMap) {
-        int[] target = edgeMap.get(v);
-        if (target != null && reachableMap.put(v, edgeMap.get(v)) == null) {
-            for (int c : edgeMap.get(v)) {
-                getConnectedComponents(c, edgeMap, reachableMap);
+    public void getConnectedComponents(int v, HashMap<Integer, int[]> edgeMap) {
+        if (edgeMap.containsKey(v) && !this.reachableMap.containsKey(v)) {
+            int[] target = edgeMap.get(v);
+            //System.out.print(v + ", ");
+            this.reachableMap.put(v, target);
+            for (int c : target) {
+                this.getConnectedComponents(c, edgeMap);
             }
         }
-        return reachableMap;
     }
 
     public graphDefinition navigateConnected(HashMap<Integer, int[]> edgeMap) {
@@ -24,12 +26,14 @@ public class dataCleaning {
         int root = -2;
         HashMap<Integer, int[]> maxConnectedSubGraph = new HashMap<Integer, int[]>();
         for (int v : edgeMap.keySet()) {
-            HashMap<Integer, int[]> connected = getConnectedComponents(v, edgeMap, new HashMap<Integer, int[]>());
-            if (connected.size() > maxReachable) {
-                maxReachable = connected.size();
-                maxConnectedSubGraph = connected;
+            System.out.println("Exploring vertex "+v);
+            getConnectedComponents(v, edgeMap);
+            if (reachableMap.size() > maxReachable) {
+                maxReachable = reachableMap.size();
+                maxConnectedSubGraph = reachableMap;
                 root = v;
             }
+            this.reachableMap = new HashMap<>();
         }
 
         return new graphDefinition(maxConnectedSubGraph, root);

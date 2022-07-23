@@ -10,7 +10,7 @@ import java.util.*;
 class LSCAResult {
     public int[] nodes;
     public int[] LSCAs;
-    public boolean status;
+    public boolean pass;
 }
 
 public class testUtils {
@@ -96,6 +96,7 @@ public class testUtils {
     }
 
     private void dfs(vertex source, vertex target, HashMap<Integer, vertex> visited) {
+        //System.out.print(source.Id + ", ");
         visited.put(source.Id, source);
         if (source.Id == target.Id) {
             DFSPaths = ArrayUtils.addAll(DFSPaths, currentPath);
@@ -121,31 +122,14 @@ public class testUtils {
             int key2 = keys.get(rand.nextInt(keys.size()));
             Pair<Integer, Integer> key = Pair.of(key1, key2);
             if (lscaResults.get(key) == null) {
-                System.out.print("Node: " + key1);
-                System.out.print(" LowPath: ");
-                for (int p : G.vertices.get(key1).lowPath) {
-                    System.out.print(p + ",");
-                }
-                System.out.print(" HighPath: ");
-                for (int p : G.vertices.get(key1).highPath) {
-                    System.out.print(p + ",");
-                }
-                System.out.print("\nNode: " + key2);
-                System.out.print(" LowPath: ");
-                for (int p : G.vertices.get(key2).lowPath) {
-                    System.out.print(p + ",");
-                }
-                System.out.print(" HighPath: ");
-                for (int p : G.vertices.get(key2).highPath) {
-                    System.out.print(p + ",");
-                }
+                System.out.print("Node: " + key1+ " Node: "+ key2);
                 int PLSCA = G.findPathLSCA(G, key1, key2);
                 int TLSCA = findTraversalLSCA(G, key1, key2);
                 LSCAResult result = new LSCAResult();
                 result.nodes = new int[]{key1, key2};
                 result.LSCAs = new int[]{PLSCA, TLSCA};
-                result.status = PLSCA == TLSCA; // This was set to zero Imagine why?
-                System.out.println("\n\tPLSCA:" + PLSCA + " TLSCA: " + TLSCA + " Status: " + result.status);
+                result.pass = PLSCA == TLSCA; // This was set to zero Imagine why?
+                System.out.println("\n\tPLSCA:" + PLSCA + " TLSCA: " + TLSCA + " Status: " + result.pass);
                 lscaResults.put(key, result);
             }
 
@@ -166,8 +150,10 @@ public class testUtils {
                     LSCAResult result = new LSCAResult();
                     result.nodes = new int[]{a.Id, b.Id};
                     result.LSCAs = new int[]{PLSCA, TLSCA};
-                    result.status = PLSCA == TLSCA; // This was set to zero Imagine why?
-                    System.out.println("Nodes: " + a.Id + " " + b.Id + " LSCA:" + PLSCA + " TLSCA: " + TLSCA + " Status: " + result.status);
+                    result.pass = PLSCA == TLSCA; // This was set to zero Imagine why?
+                    if(!result.pass){
+                        System.out.println("Nodes: " + a.Id + " " + b.Id + " LSCA:" + PLSCA + " TLSCA: " + TLSCA + " Status: " + result.pass);
+                    }
                     lscaResults.put(key, result);
                 }
             }

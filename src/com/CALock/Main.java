@@ -6,14 +6,16 @@ public class Main {
     //TODO: the first node created is always considered as the root. So tread carefully.
 
     public static void main(String[] args) throws Exception {
-        String filePath = "/Users/pandey/work/CALock/datasets/emailEucoretemporalDept3.txt";
-        String cleanedFilePath = "/Users/pandey/work/CALock/datasets/emailEucoretemporalDept3Connected.txt";
+        String filePath = "";
+        String cleanedFilePath = "/Users/pandey/work/CALock/datasets/email-Enron-c.txt";
 
-        // Cleanup the data to read from. This set of code creates a graph with connected components.
-        dataCleaning cleaner = new dataCleaning();
-        HashMap<Integer, int[]> edges = cleaner.loadfile(filePath, ",");
-        graphDefinition g = cleaner.navigateConnected(edges);
-        cleaner.writeEdgeMapToFile(cleanedFilePath, g);
+        if (!filePath.equals("")) {
+            // Cleanup the data to read from. This set of code creates a graph with connected components.
+            dataCleaning cleaner = new dataCleaning();
+            HashMap<Integer, int[]> edges = cleaner.loadfile(filePath, ",");
+            graphDefinition g = cleaner.navigateConnected(edges);
+            cleaner.writeEdgeMapToFile(cleanedFilePath, g);
+        }
 
 
         testUtils testInstance = new testUtils();
@@ -23,7 +25,12 @@ public class Main {
         long singleCreateEnd = System.currentTimeMillis();
         System.out.println("Single Insertion took " + (float) (singleCreateEnd - singleCreateStart) / 1000 + "s");
         printer.printGraphInfo(G1);
-        testInstance.testAllPairLSCA(G1);
+        if(G1.vertices.size() < 100){
+            testInstance.testAllPairLSCA(G1);
+        }else{
+            testInstance.testRandomPairLSCA(G1, 50);
+        }
+
 
         /*
         long massiveCreateStart = System.currentTimeMillis();
