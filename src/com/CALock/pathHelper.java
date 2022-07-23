@@ -25,6 +25,6 @@ public class pathHelper {
                 break;
             }
         }
-        return commonPathLength < LSCALength;
+        return commonPathLength < LSCALength; // This doesnt work with equality. Why?
     }
 }

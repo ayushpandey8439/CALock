@@ -17,27 +17,30 @@ public class Main {
             cleaner.writeEdgeMapToFile(cleanedFilePath, g);
         }
 
-
         testUtils testInstance = new testUtils();
         graphDefinition gdef = testInstance.createEdgeMap(cleanedFilePath, ",");
         long singleCreateStart = System.currentTimeMillis();
-        graph G1 = new graph(gdef, false);
+        graph G1 = new graph(gdef, true);
         long singleCreateEnd = System.currentTimeMillis();
         System.out.println("Single Insertion took " + (float) (singleCreateEnd - singleCreateStart) / 1000 + "s");
         printer.printGraphInfo(G1);
         if(G1.vertices.size() < 100){
             testInstance.testAllPairLSCA(G1);
         }else{
-            testInstance.testRandomPairLSCA(G1, 50);
+            testInstance.testRandomPairLSCA(G1, 5);
         }
 
 
-        /*
         long massiveCreateStart = System.currentTimeMillis();
-        graph G2 = testInstance.createDAG(edgeMap, false);
+        graph G2 = new graph(gdef, true);
         long massiveCreateEnd = System.currentTimeMillis();
         System.out.println("Massive Insertion took " + (float) (massiveCreateEnd - massiveCreateStart) / 1000 + "s");
-        printGraphInfo(G2);
+        printer.printGraphInfo(G1);
+        if(G2.vertices.size() < 100){
+            testInstance.testAllPairLSCA(G1);
+        }else{
+            testInstance.testRandomPairLSCA(G1, 5);
+        }
 
 
         /*

@@ -29,11 +29,12 @@ public class preProcessor {
             int[] newLowPath = ArrayUtils.addAll(IlowPath, current.Id);
             int[] newHighPath = ArrayUtils.addAll(IhighPath, current.Id);
             boolean updated = false;
-            if (current.highPath.length == 1) {
+            //If the paths were default or even after assigning the paths, the LSCA length remains zero.
+            if (current.highPath.length == 1 || current.LSCAPathLength ==0) {
                 current.highPath = newHighPath;
                 updated = true;
             }
-            if (current.lowPath.length == 1) {
+            if (current.lowPath.length == 1 || current.LSCAPathLength == 0) {
                 current.lowPath = newLowPath;
                 updated = true;
             }

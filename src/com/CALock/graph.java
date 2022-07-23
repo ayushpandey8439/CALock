@@ -56,6 +56,15 @@ public class graph {
         if (!assignLabelsDuringCreation) {
             preProcessor P = new preProcessor();
             P.assignLabels(this);
+        } else {
+            //If edge label creation was unstable during normal update and a node ends up with a zero LSCA length, then we reassign labels.
+            for(vertex v: this.vertices.values()){
+                if(v.LSCAPathLength == 0){
+                    preProcessor P = new preProcessor();
+                    P.assignLabels(this);
+                    break;
+                }
+            }
         }
 
     }

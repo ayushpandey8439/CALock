@@ -132,11 +132,8 @@ public class testUtils {
                 System.out.println("\n\tPLSCA:" + PLSCA + " TLSCA: " + TLSCA + " Status: " + result.pass);
                 lscaResults.put(key, result);
             }
-
-
         }
     }
-
 
     public void testAllPairLSCA(graph G) {
         Map<Pair<Integer, Integer>, LSCAResult> lscaResults = new HashMap<>();
