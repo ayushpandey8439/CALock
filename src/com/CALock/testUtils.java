@@ -6,6 +6,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.*;
+import java.util.stream.Collectors;
 
 class LSCAResult {
     public int[] nodes;
@@ -60,13 +61,23 @@ public class testUtils {
     }
 
 
-    private int findTraversalLSCA(graph G, int... V) {
+    public int findTraversalLSCA(graph G, int... V) {
         this.currentPath = new int[]{G.root.Id};
         this.DFSPaths = new int[][]{};
         for (int v : V) {
             dfs(G.root, G.vertices.get(v), new HashMap<>());
         }
-
+        boolean allVerticesReached = true;
+        for (int v : V) {
+            List<int[]> pathsToNode = Arrays.stream(DFSPaths).filter(path -> path[path.length - 1] == v).collect(Collectors.toList());
+            if (pathsToNode.isEmpty()) {
+                allVerticesReached = false;
+                break;
+            }
+        }
+        if (!allVerticesReached) {
+            throw new RuntimeException("No path exists to some nodes. Please recheck the graph specification or parameters.");
+        }
 
         int[] shortestPath = DFSPaths.length > 0 ? DFSPaths[0] : new int[]{};// For non-reachable pairs, DFS Paths will be empty.
         for (int[] p : DFSPaths) {
@@ -118,18 +129,11 @@ public class testUtils {
 
         Random rand = new Random();
         for (int i = 0; i < numPairs; i++) {
-            int key1 = keys.get(rand.nextInt(keys.size()));
-            int key2 = keys.get(rand.nextInt(keys.size()));
-            Pair<Integer, Integer> key = Pair.of(key1, key2);
+            int a = keys.get(rand.nextInt(keys.size()));
+            int b = keys.get(rand.nextInt(keys.size()));
+            Pair<Integer, Integer> key = Pair.of(a, b);
             if (lscaResults.get(key) == null) {
-                System.out.print("Node: " + key1+ " Node: "+ key2);
-                int PLSCA = G.findPathLSCA(G, key1, key2);
-                int TLSCA = findTraversalLSCA(G, key1, key2);
-                LSCAResult result = new LSCAResult();
-                result.nodes = new int[]{key1, key2};
-                result.LSCAs = new int[]{PLSCA, TLSCA};
-                result.pass = PLSCA == TLSCA; // This was set to zero Imagine why?
-                System.out.println("\n\tPLSCA:" + PLSCA + " TLSCA: " + TLSCA + " Status: " + result.pass);
+                LSCAResult result = testLSCAForPair(G, a, b);
                 lscaResults.put(key, result);
             }
         }
@@ -142,19 +146,22 @@ public class testUtils {
                 Pair<Integer, Integer> key = Pair.of(a.Id, b.Id);
                 Pair<Integer, Integer> keyR = Pair.of(b.Id, a.Id);
                 if (lscaResults.get(key) == null && lscaResults.get(keyR) == null) {
-                    int PLSCA = G.findPathLSCA(G, a.Id, b.Id);
-                    int TLSCA = findTraversalLSCA(G, a.Id, b.Id);
-                    LSCAResult result = new LSCAResult();
-                    result.nodes = new int[]{a.Id, b.Id};
-                    result.LSCAs = new int[]{PLSCA, TLSCA};
-                    result.pass = PLSCA == TLSCA; // This was set to zero Imagine why?
-                    if(!result.pass){
-                        System.out.println("Nodes: " + a.Id + " " + b.Id + " LSCA:" + PLSCA + " TLSCA: " + TLSCA + " Status: " + result.pass);
-                    }
+                    LSCAResult result = testLSCAForPair(G, a.Id, b.Id);
                     lscaResults.put(key, result);
                 }
             }
         }
         System.out.println("Total Pairs examined: " + lscaResults.size());
+    }
+
+    public LSCAResult testLSCAForPair(graph G, int a, int b) {
+        int TLSCA = findTraversalLSCA(G, a, b);
+        int PLSCA = G.findPathLSCA(a, b);
+        LSCAResult result = new LSCAResult();
+        result.nodes = new int[]{a, b};
+        result.LSCAs = new int[]{PLSCA, TLSCA};
+        result.pass = PLSCA == TLSCA; // This was set to zero Imagine why?
+        System.out.println("Nodes: " + a + ", " + b + "\n\tLSCA:" + PLSCA + " TLSCA: " + TLSCA + " Status: " + result.pass);
+        return result;
     }
 }

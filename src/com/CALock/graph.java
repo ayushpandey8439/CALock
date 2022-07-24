@@ -18,7 +18,7 @@ public class graph {
         this.sentinel = new vertex(-1, -1);
     }
 
-    graph(graphDefinition G, boolean assignLabelsDuringCreation) {
+    graph(graphDefinition G) {
         this.vertices = new HashMap<>();
         this.sentinel = new vertex(-1, -1);
 
@@ -31,11 +31,7 @@ public class graph {
                     this.addVertex(target, target);
                 }
                 try {
-                    if (assignLabelsDuringCreation) {
-                        this.createEdge(source, target);
-                    } else {
-                        this.createEdgeWithoutUpdatingPaths(source, target);
-                    }
+                    this.createEdgeWithoutUpdatingPaths(source, target);
                 } catch (Exception e) {
                     System.out.println("Create Edge failed for " + source + " -> " + target);
                 }
@@ -49,24 +45,12 @@ public class graph {
             } else {
                 this.findRootVertex();
             }
+            preProcessor P = new preProcessor();
+            P.assignLabels(this);
 
         } catch (Exception e) {
             System.out.println(e);
         }
-        if (!assignLabelsDuringCreation) {
-            preProcessor P = new preProcessor();
-            P.assignLabels(this);
-        } else {
-            //If edge label creation was unstable during normal update and a node ends up with a zero LSCA length, then we reassign labels.
-            for(vertex v: this.vertices.values()){
-                if(v.LSCAPathLength == 0){
-                    preProcessor P = new preProcessor();
-                    P.assignLabels(this);
-                    break;
-                }
-            }
-        }
-
     }
 
     private void findRootVertex() throws Exception {
@@ -98,19 +82,24 @@ public class graph {
             this.root = this.sentinel;
         }// If there is no definite root, we need to find the node that gives us complete reachability
         else {
-            for(int v: this.vertices.keySet() ){
+            boolean foundRoot = false;
+            for (int v : this.vertices.keySet()) {
                 HashSet<Integer> connectedSubcomponent = this.dfExplore(v, new HashSet<>());
-                if(connectedSubcomponent.size()==this.vertices.size()){
+                if (connectedSubcomponent.size() == this.vertices.size()) {
                     this.root = this.vertices.get(v);
+                    foundRoot = true;
                     break;
                 }
             }
-            throw new RuntimeException("No node in the graph ensures reachability. Please reconfigure the graph");
+            if (!foundRoot) {
+                throw new RuntimeException("No node in the graph ensures reachability. Please reconfigure the graph");
+            }
+
         }
     }
 
-    private HashSet<Integer> dfExplore(int v, HashSet<Integer> reachable){
-        if(this.vertices.containsKey(v) && !reachable.contains(v)){
+    private HashSet<Integer> dfExplore(int v, HashSet<Integer> reachable) {
+        if (this.vertices.containsKey(v) && !reachable.contains(v)) {
             Set<Integer> targets = this.vertices.get(v).children.keySet();
             reachable.add(v);
             for (int c : targets) {
@@ -120,10 +109,10 @@ public class graph {
         return reachable;
     }
 
-    public int findPathLSCA(graph G, int... V) {
+    public int findPathLSCA(int... V) {
         int[][] studyPaths = new int[][]{};
         for (int v : V) {
-            vertex vert = G.vertices.get(v);
+            vertex vert = this.vertices.get(v);
             studyPaths = ArrayUtils.addAll(studyPaths, vert.lowPath, vert.highPath);
         }
 
@@ -134,7 +123,7 @@ public class graph {
             }
         }
 
-        int lowestNode = 0;
+        int lowestNode = -2;
         for (int i = 0; i < shortestPath.length; i++) {
             boolean isCommon = true;
             for (int[] studyPath : studyPaths) {
@@ -149,6 +138,9 @@ public class graph {
             } else {
                 lowestNode = shortestPath[i];
             }
+        }
+        if (lowestNode == -2) {
+            throw new RuntimeException("LSCA does not exist. Please ensure the graph is rooted.");
         }
         return lowestNode;
     }
@@ -178,7 +170,7 @@ public class graph {
             source.children.put(t, target);
             target.parents.put(s, source);
         } else {
-            throw new Exception("Source or target missing from te graph");
+            throw new Exception("Source or target missing from the graph");
         }
     }
 
@@ -219,7 +211,7 @@ public class graph {
     }
 
     private void updatePath(vertex source, vertex target, boolean isInherited, int inheritedFrom, int[] inheritedLow, int[] inheritedHigh, HashSet<Integer> visited) {
-        if (visited.contains(source.Id)) {
+        if (visited.contains(source.Id) || target == this.root) {
             return;
         } else {
             visited.add(target.Id);

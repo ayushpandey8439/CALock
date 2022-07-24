@@ -7,6 +7,7 @@ public class Main {
 
     public static void main(String[] args) throws Exception {
         String filePath = "";
+        //String cleanedFilePath = "/Users/pandey/work/CALock/datasets/cycleOnRoot.txt";
         String cleanedFilePath = "/Users/pandey/work/CALock/datasets/email-Enron-c.txt";
 
         if (!filePath.equals("")) {
@@ -20,27 +21,20 @@ public class Main {
         testUtils testInstance = new testUtils();
         graphDefinition gdef = testInstance.createEdgeMap(cleanedFilePath, ",");
         long singleCreateStart = System.currentTimeMillis();
-        graph G1 = new graph(gdef, true);
+        // Preprocessing never assigns labels. Labels are only assigned on a well defined graph. A well defined graph has a root defined.
+        graph G1 = new graph(gdef);
         long singleCreateEnd = System.currentTimeMillis();
         System.out.println("Single Insertion took " + (float) (singleCreateEnd - singleCreateStart) / 1000 + "s");
         printer.printGraphInfo(G1);
-        if(G1.vertices.size() < 100){
+        if (G1.vertices.size() < 100) {
             testInstance.testAllPairLSCA(G1);
-        }else{
+        } else {
             testInstance.testRandomPairLSCA(G1, 5);
         }
-
-
-        long massiveCreateStart = System.currentTimeMillis();
-        graph G2 = new graph(gdef, true);
-        long massiveCreateEnd = System.currentTimeMillis();
-        System.out.println("Massive Insertion took " + (float) (massiveCreateEnd - massiveCreateStart) / 1000 + "s");
-        printer.printGraphInfo(G1);
-        if(G2.vertices.size() < 100){
-            testInstance.testAllPairLSCA(G1);
-        }else{
-            testInstance.testRandomPairLSCA(G1, 5);
-        }
+        System.out.println("Adding edge to the graph.");
+        G1.addVertex(40000, 40000);
+        G1.createEdge(726, 40000);
+        testInstance.testLSCAForPair(G1, 4000, 726);
 
 
         /*
