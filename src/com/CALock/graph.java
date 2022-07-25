@@ -16,6 +16,7 @@ public class graph {
     graph() {
         this.vertices = new HashMap<>();
         this.sentinel = new vertex(-1, -1);
+        this.root = null;
     }
 
     graph(graphDefinition G) {
@@ -53,7 +54,7 @@ public class graph {
         }
     }
 
-    private void findRootVertex() throws Exception {
+    public void findRootVertex() throws Exception {
         HashMap<Integer, vertex> rootCandidates = new HashMap<>();
         for (vertex v : this.vertices.values()) {
             if (v.parents.size() == 0 && !v.isSentinel()) {
@@ -69,8 +70,7 @@ public class graph {
             this.sentinel.initialiseVertexMetadata();
             this.root = this.vertices.values().iterator().next();
         }// If there is are multiple nodes with no incoming edges, create a sentinel.
-        else if (rootCandidates.size() >= 1) {
-            rootCandidates.size();
+        else if (rootCandidates.size() > 1) {
             this.vertices.put(this.sentinel.Id, this.sentinel);
             for (vertex r : rootCandidates.values()) {
                 try {
@@ -146,7 +146,9 @@ public class graph {
     }
 
     public void addVertex(int id, int data) {
-        this.vertices.put(id, new vertex(id, data));
+        if (!this.vertices.containsKey(id)) {
+            this.vertices.put(id, new vertex(id, data));
+        }
     }
 
     public void createEdge(int s, int t) throws Exception {
@@ -156,7 +158,7 @@ public class graph {
         if (source != null && target != null) {
             source.children.put(t, target);
             target.parents.put(s, source);
-            updatePath(source, target, false, source.Id, new int[]{}, new int[]{}, new HashSet<>());
+            this.updatePath(source, target, false, source.Id, new int[]{}, new int[]{}, new HashSet<>());
         } else {
             throw new Exception("Source or target missing from the graph!");
         }
@@ -174,7 +176,8 @@ public class graph {
         }
     }
 
-    public void removeEdge(int s, int t) {
+    public void removeEdge(int s, int t) throws Exception {
+        //TODO: When removing edges, we need to ensure that a single root remains.
         vertex source = this.vertices.get(s);
         vertex target = this.vertices.get(t);
 
@@ -204,6 +207,9 @@ public class graph {
         }
 
         target.LSCAPathLength = commonPathLength;
+        this.findRootVertex();
+        preProcessor P = new preProcessor();
+        P.assignLabels(this);
 
         for (vertex c : target.children.values()) {
             updatePath(target, c, false, target.Id, target.lowPath, target.highPath, new HashSet<>());
@@ -211,10 +217,10 @@ public class graph {
     }
 
     private void updatePath(vertex source, vertex target, boolean isInherited, int inheritedFrom, int[] inheritedLow, int[] inheritedHigh, HashSet<Integer> visited) {
-        if (visited.contains(source.Id) || target == this.root) {
+        if (visited.contains(source.Id)) {
             return;
         } else {
-            visited.add(target.Id);
+            visited.add(source.Id);
             boolean updated = false;
             if (isInherited) {
                 if (target.lowPath[0] == inheritedFrom) {
@@ -237,12 +243,13 @@ public class graph {
                     updated = true;
                 }
                 if (!updated) {
-                    if (shortensPrefix(targetHighNew, target.lowPath, target.LSCAPathLength)) {
-                        target.highPath = targetHighNew;
+                    if (shortensPrefix(targetLowNew, target.highPath, target.LSCAPathLength)) {
+                        target.lowPath = targetLowNew;
                         updated = true;
                     }
-                    if (!updated && shortensPrefix(targetLowNew, target.highPath, target.LSCAPathLength)) {
-                        target.lowPath = targetLowNew;
+                    if (!updated && shortensPrefix(targetHighNew, target.lowPath, target.LSCAPathLength)) {
+                        target.highPath = targetHighNew;
+                        updated = true;
                     }
                 }
             }
@@ -267,6 +274,7 @@ public class graph {
                     }
                 }
             }
+
 
         }
     }

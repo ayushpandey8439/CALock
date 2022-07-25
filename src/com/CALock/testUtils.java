@@ -6,7 +6,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.*;
-import java.util.stream.Collectors;
 
 class LSCAResult {
     public int[] nodes;
@@ -65,11 +64,11 @@ public class testUtils {
         this.currentPath = new int[]{G.root.Id};
         this.DFSPaths = new int[][]{};
         for (int v : V) {
-            dfs(G.root, G.vertices.get(v), new HashMap<>());
+            dfs(G.root, G.vertices.get(v), new HashSet<Integer>());
         }
         boolean allVerticesReached = true;
         for (int v : V) {
-            List<int[]> pathsToNode = Arrays.stream(DFSPaths).filter(path -> path[path.length - 1] == v).collect(Collectors.toList());
+            List<int[]> pathsToNode = Arrays.stream(DFSPaths).filter(path -> path[path.length - 1] == v).toList();
             if (pathsToNode.isEmpty()) {
                 allVerticesReached = false;
                 break;
@@ -106,18 +105,18 @@ public class testUtils {
 
     }
 
-    private void dfs(vertex source, vertex target, HashMap<Integer, vertex> visited) {
+    private void dfs(vertex current, vertex target, HashSet<Integer> visited) {
         //System.out.print(source.Id + ", ");
-        visited.put(source.Id, source);
-        if (source.Id == target.Id) {
+        visited.add(current.Id);
+        if (current.Id == target.Id) {
             DFSPaths = ArrayUtils.addAll(DFSPaths, currentPath);
         } else {
-            for (vertex v : source.children.values()) {
+            for (vertex v : current.children.values()) {
                 currentPath = ArrayUtils.addAll(currentPath, v.Id);
-                if (visited.get(v.Id) == null) {
+                if (!visited.contains(v.Id)) {
                     dfs(v, target, visited);
                 }
-                //visited.remove(v.Id);
+                visited.remove(v.Id);
                 currentPath = ArrayUtils.remove(currentPath, currentPath.length - 1);
             }
         }
